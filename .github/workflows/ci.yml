@@ -1,4 +1,4 @@
-name: SIL Tests & Pico Build
+name: SIL Tests
 
 on:
   workflow_dispatch:
