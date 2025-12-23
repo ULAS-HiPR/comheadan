@@ -1,0 +1,36 @@
+name: SIL Tests & Pico Build
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+
+jobs:
+  sil-tests:
+    name: Run SIL Tests (Native)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install PlatformIO
+        run: pip install platformio
+
+      - name: Run SIL tests
+        run: |
+          pio test -e sil
+
+      - name: Quality Check code
+        run: |
+          pio check -e sil
