@@ -24,8 +24,3 @@ void I2C_Pico::read(int addr, uint8_t data, uint8_t* buf, uint len) {
         }
     }
 }
-
-void I2C_Pico::updatePins(pin_size_t sda, pin_size_t scl) {
-    Wire.end();
-    Wire.begin(sda, scl);
-}
