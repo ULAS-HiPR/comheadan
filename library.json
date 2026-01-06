@@ -1,4 +1,8 @@
 {
   "name": "comheadan",
-  "dependencies": []
+  "dependencies": [],
+   "build": {
+    "includeDir": "include",
+    "srcDir": "src"
+  }
 }
