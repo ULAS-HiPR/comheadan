@@ -1,5 +1,6 @@
 {
   "name": "comheadan",
+  "version": "0.0.0",
   "dependencies": [],
    "build": {
     "includeDir": "include",
