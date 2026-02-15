@@ -1,6 +1,7 @@
 #ifndef DATA_H
 #define DATA_H
 #include <stdio.h>
+#include <cstdint>
 
 //12 bytes
 struct accle_data
