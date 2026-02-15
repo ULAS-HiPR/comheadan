@@ -1,13 +1,12 @@
-#ifndef SPI_PICO_H
-#define SPI_PICO_H
+#ifndef SPI_STM_H
+#define SPI_STM_H
 #include "SPI_Handler.h"
-#include <Arduino.h>
 #include <SPI.h>
 #include <cstdio>
 
-class SPI_Pico : public SPI_Handler {
+class SPI_STM : public SPI_Handler {
     public:
-        explicit SPI_Pico(uint8_t sck, uint8_t mosi, uint8_t miso, uint8_t cs) : sck(sck), mosi(mosi), miso(miso), cs(cs) {
+        explicit SPI_STM(uint8_t sck, uint8_t mosi, uint8_t miso, uint8_t cs) : sck(sck), mosi(mosi), miso(miso), cs(cs) {
             printf("making spi -> i hate ardino and dont wanna write actual impl");
         }
 
