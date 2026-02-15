@@ -1,8 +1,7 @@
-#ifdef I2C_PICO_H
-
+#ifndef I2C_PICO_H
+#define I2C_PICO_H
 #include "I2C_Handler.h"
-#include <Arduino.h>
-#include <Wire.h>
+
 
 class I2C_Pico : public I2C_Handler {
     public:

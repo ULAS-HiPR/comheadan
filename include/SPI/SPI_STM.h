@@ -1,5 +1,5 @@
-#ifdef SPI_PICO_H
-
+#ifndef SPI_PICO_H
+#define SPI_PICO_H
 #include "SPI_Handler.h"
 #include <Arduino.h>
 #include <SPI.h>
