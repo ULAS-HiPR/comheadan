@@ -15,7 +15,7 @@ class SPI_Pico : public SPI_Handler {
         void read(int cs, uint8_t reg, uint8_t* buf, uint16_t len) override ;
         //used for BMP library which handles CS internally
         void read_no_cs(uint8_t reg, uint8_t *buf, uint16_t len) override;
-        void write_no_cs(uint8_t* reg, uint8_t const *buf, uint16_t len) override;
+        void write_no_cs(uint8_t reg, uint8_t const *buf, uint16_t len) override;
 
         void cs_select(int cs) override ;
         void cs_deselect(int cs) override ;
