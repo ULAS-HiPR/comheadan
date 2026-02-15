@@ -1,3 +1,4 @@
+#ifdef SPI_PICO_H
 #include <SPI/SPI_Pico.h>
 
 void SPI_Pico::write(int cs, uint8_t reg, uint8_t *buf, uint16_t len) {
@@ -27,3 +28,5 @@ void SPI_Pico::cs_deselect(int cs) {
 void SPI_Pico::delay_ms(int ms) {
     delay(ms);
 }
+
+#endif

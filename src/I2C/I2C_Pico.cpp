@@ -1,3 +1,5 @@
+#ifdef I2C_PICO_H
+
 #include <I2C/I2C_Pico.h>
 
 void I2C_Pico::init() {
@@ -24,3 +26,5 @@ void I2C_Pico::read(int addr, uint8_t data, uint8_t* buf, uint len) {
         }
     }
 }
+
+#endif 
