@@ -52,7 +52,6 @@ struct gps_data
     uint8_t satellites;
 };
 
-
 struct imu_data
 {
     accle_data acceleration;
