@@ -1,11 +1,12 @@
-#ifndef I2C_PICO_H
-#define I2C_PICO_H
+#ifndef I2C_STM_H
+#define I2C_STM_H
 #include "I2C_Handler.h"
+#include "stm32f4xx_hal.h"
 
 
-class I2C_Pico : public I2C_Handler {
+class I2C_STM : public I2C_Handler {
     public:
-        explicit I2C_Pico(uint8_t address) : addr(address){}
+        explicit I2C_STM(I2C_HandleTypeDef* hi2c, uint8_t address) : addr(address){}
 
         void init();
         void write(int addr, uint8_t* data, uint len) override ;
@@ -13,6 +14,7 @@ class I2C_Pico : public I2C_Handler {
 
     private:
         uint8_t addr;
+        I2C_HandleTypeDef* _hi2c;
          
 };
 
