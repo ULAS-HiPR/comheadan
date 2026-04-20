@@ -12,6 +12,7 @@
 #define CAN_ID_FLIGHT_STATE   0x030
 #define CAN_ID_PYRO_ARM       0x040
 #define CAN_ID_PYRO_FIRE      0x050
+#define CAN_ID_KALMANN        0x060
 
 
 // Priority 2 — MEDIUM
@@ -88,26 +89,17 @@ struct __attribute__((packed)) BARO_Payload {
 
 struct __attribute__((packed)) FLIGHT_STATE_Payload {
     uint8_t  state;          // FlightState enum
-    int16_t  altitude_m;
-    uint8_t  vspeed_cms[3]; 
-    uint16_t timestamp_ms; 
+    uint8_t flags;           // Random flags
+    uint16_t timestamp_ms;
 };
 
-// Helpers to pack speed in 24 bit
-inline void vspeed_pack(FLIGHT_STATE_Payload& p, int32_t v) {
-    p.vspeed_cms[0] = (v >>  0) & 0xFF;
-    p.vspeed_cms[1] = (v >>  8) & 0xFF;
-    p.vspeed_cms[2] = (v >> 16) & 0xFF;
-}
-
-inline int32_t vspeed_unpack(const FLIGHT_STATE_Payload& p) {
-    int32_t v = ((uint32_t)p.vspeed_cms[2] << 16) |
-                ((uint32_t)p.vspeed_cms[1] <<  8) |
-                ((uint32_t)p.vspeed_cms[0] <<  0);
-    if (v & 0x800000) v |= 0xFF000000;
-    return v;
-}
-
+struct __attribute__((packed)) KALMANN_Payload {
+    int16_t accleration;
+    int16_t  altitude_m;
+    int16_t  vspeed_cms;
+    uint16_t timestamp_ms;
+    
+};
 
 struct __attribute__((packed)) PYRO_ARM_Payload {
     uint8_t  channel_mask;
