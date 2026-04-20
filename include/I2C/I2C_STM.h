@@ -1,8 +1,12 @@
-#ifdef F4
+#ifdef STM
 #ifndef I2C_STM_H
 #define I2C_STM_H
 #include "I2C_Handler.h"
+#ifdef F4
 #include "stm32f4xx_hal.h"
+#elif F0
+#include "stm32f0xx_hal.h"
+#endif
 
 
 class I2C_STM : public I2C_Handler {

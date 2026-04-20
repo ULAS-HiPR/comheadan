@@ -1,8 +1,12 @@
-#ifdef F4
+#ifdef STM
 #ifndef SPI_STM_H
 #define SPI_STM_H
 #include "SPI_Handler.h"
+#ifdef F4
 #include "stm32f4xx_hal.h"
+#elif F0
+#include "stm32f0xx_hal.h"
+#endif
 #include <cstdio>
 
 class SPI_STM : public SPI_Handler {
