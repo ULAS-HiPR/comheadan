@@ -1,9 +1,13 @@
-#ifdef F4
+#ifdef STM
 #ifndef CAN_STM_H
 #define CAN_STM_H
 
 #include "CAN_Handler.h"
+#ifdef F4
 #include "stm32f4xx_hal.h"
+#elif F0
+#include "stm32f0xx_hal.h"
+#endif
 
 class CAN_STM : public CAN_Handler {
     public:
