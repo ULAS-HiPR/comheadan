@@ -39,7 +39,7 @@ struct core_flight_data
 {
     uint32_t time{0};
     baro_data barometer;
-    accle_data acceleration;
+    imu_data imu;
 };
 
 //25 bytes
