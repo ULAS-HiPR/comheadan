@@ -26,6 +26,14 @@ struct baro_data
     float altitude{0};
 };
 
+struct imu_data
+{
+    accle_data acceleration;
+    gyro_data gyro;
+    int temperature; //check this
+};
+
+
 //12 bytes
 struct prediction_data
 {
@@ -52,12 +60,6 @@ struct gps_data
     uint8_t satellites;
 };
 
-struct imu_data
-{
-    accle_data acceleration;
-    gyro_data gyro;
-    int temperature; //check this
-};
 
 //39 bytes
 struct secondary_flight_data
