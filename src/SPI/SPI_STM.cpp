@@ -15,7 +15,7 @@ void SPI_STM::cs_deselect(int)
     HAL_GPIO_WritePin(_cs_port, _cs_pin, GPIO_PIN_SET);
 }
 
-void SPI_STM::write(int, uint8_t reg, uint8_t *buf, uint16_t len)
+void SPI_STM::write(int cs, uint8_t reg, uint8_t *buf, uint16_t len)
 {
     cs_select(0);
     HAL_SPI_Transmit(_hspi, &reg, 1, HAL_MAX_DELAY);
