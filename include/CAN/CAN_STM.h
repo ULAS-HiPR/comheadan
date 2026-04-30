@@ -9,6 +9,7 @@
 #include "stm32f0xx_hal.h"
 #endif
 
+#if defined(CAN1)
 class CAN_STM : public CAN_Handler {
     public:
         explicit CAN_STM(CAN_HandleTypeDef* hcan) : _hcan(hcan) {}
@@ -19,6 +20,7 @@ class CAN_STM : public CAN_Handler {
     private:
         CAN_HandleTypeDef* _hcan;
 };
+#endif
 
 #endif
 #endif

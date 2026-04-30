@@ -16,6 +16,7 @@ class I2C_STM : public I2C_Handler {
         void init();
         void write(int addr, uint8_t* data, std::size_t len) override ;
         void read(int addr, uint8_t data, uint8_t* buf, std::size_t len) override ;
+        void delay_ms(int ms) override;
 
     private:
         I2C_HandleTypeDef* _hi2c;
