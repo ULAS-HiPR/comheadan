@@ -1,4 +1,5 @@
 #include <SPI/SPI_STM.h>
+#include "cmsis_os.h"
 
 SPI_STM::SPI_STM(SPI_HandleTypeDef* hspi, GPIO_TypeDef* cs_port, uint16_t cs_pin) : _hspi(hspi), _cs_port(cs_port), _cs_pin(cs_pin)
     , _last_status(HAL_OK), _last_error(0)
@@ -105,7 +106,21 @@ bool SPI_STM::transfer(const uint8_t *tx, uint8_t *rx, std::size_t len)
 
 void SPI_STM::delay_ms(int ms)
 {
-    HAL_Delay(ms);
+    if (ms <= 0) {
+        return;
+    }
+
+    if (osKernelGetState() == osKernelRunning) {
+        osDelay(static_cast<uint32_t>(ms));
+        return;
+    }
+
+    for (int remaining = 0; remaining < ms; ++remaining) {
+        volatile uint32_t cycles = SystemCoreClock / 8000U;
+        while (cycles-- > 0U) {
+            __NOP();
+        }
+    }
 }
 
 uint32_t SPI_STM::last_status() const
