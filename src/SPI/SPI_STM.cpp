@@ -1,55 +1,119 @@
 #include <SPI/SPI_STM.h>
 
 SPI_STM::SPI_STM(SPI_HandleTypeDef* hspi, GPIO_TypeDef* cs_port, uint16_t cs_pin) : _hspi(hspi), _cs_port(cs_port), _cs_pin(cs_pin)
+    , _last_status(HAL_OK), _last_error(0)
+{
+    HAL_GPIO_WritePin(_cs_port, _cs_pin, GPIO_PIN_SET);
+}
+
+bool SPI_STM::update_status(HAL_StatusTypeDef status)
+{
+    _last_status = static_cast<uint32_t>(status);
+    _last_error = HAL_SPI_GetError(_hspi);
+    return status == HAL_OK;
+}
+
+void SPI_STM::cs_low()
+{
+    HAL_GPIO_WritePin(_cs_port, _cs_pin, GPIO_PIN_RESET);
+}
+
+void SPI_STM::cs_high()
 {
     HAL_GPIO_WritePin(_cs_port, _cs_pin, GPIO_PIN_SET);
 }
 
 void SPI_STM::cs_select(int)
 {
-    HAL_GPIO_WritePin(_cs_port, _cs_pin, GPIO_PIN_RESET);
+    cs_low();
 }
 
 void SPI_STM::cs_deselect(int)
 {
-    HAL_GPIO_WritePin(_cs_port, _cs_pin, GPIO_PIN_SET);
+    cs_high();
 }
 
-void SPI_STM::write(int, uint8_t reg, uint8_t *buf, uint16_t len)
+bool SPI_STM::write(int cs, uint8_t reg, uint8_t *buf, uint16_t len)
 {
-    cs_select(0);
-    HAL_SPI_Transmit(_hspi, &reg, 1, HAL_MAX_DELAY);
-    HAL_SPI_Transmit(_hspi, buf, len, HAL_MAX_DELAY);
-    cs_deselect(0);
+    cs_select(cs);
+    bool ok = transmit(&reg, 1) && transmit(buf, len);
+    cs_deselect(cs);
+    return ok;
 }
 
 
-void SPI_STM::read(int cs, uint8_t reg, uint8_t* buf, uint16_t len)
+bool SPI_STM::read(int cs, uint8_t reg, uint8_t* buf, uint16_t len)
 {
-    cs_select(0);
-    uint8_t addr = reg | 0x80; // read bit
-    HAL_SPI_Transmit(_hspi, &addr, 1, HAL_MAX_DELAY);
-    HAL_SPI_Receive(_hspi, buf, len, HAL_MAX_DELAY);
-
-    cs_deselect(0);
+    cs_select(cs);
+    bool ok = read_no_cs(reg, buf, len);
+    cs_deselect(cs);
+    return ok;
 }
 
-void SPI_STM::read_no_cs(uint8_t reg, uint8_t *buf, uint16_t len)
+bool SPI_STM::read_no_cs(uint8_t reg, uint8_t *buf, uint16_t len)
 {
     uint8_t addr = reg | 0x80;
-    HAL_SPI_Transmit(_hspi, &addr, 1, HAL_MAX_DELAY);
-    HAL_SPI_Receive(_hspi, buf, len, HAL_MAX_DELAY);
+    return transmit(&addr, 1) && receive(buf, len);
 }
 
 
-void SPI_STM::write_no_cs(uint8_t reg, const uint8_t *buf, uint16_t len)
+bool SPI_STM::write_no_cs(uint8_t reg, const uint8_t *buf, uint16_t len)
 {
-    HAL_SPI_Transmit(_hspi, &reg, 1, HAL_MAX_DELAY);
-    HAL_SPI_Transmit(_hspi, (uint8_t*)buf, len, HAL_MAX_DELAY);
+    return transmit(&reg, 1) && transmit(buf, len);
+}
+
+bool SPI_STM::transmit(const uint8_t *data, std::size_t len)
+{
+    while (len > 0) {
+        uint16_t chunk = len > UINT16_MAX ? UINT16_MAX : static_cast<uint16_t>(len);
+        if (!update_status(HAL_SPI_Transmit(_hspi, const_cast<uint8_t*>(data), chunk, HAL_MAX_DELAY))) {
+            return false;
+        }
+        data += chunk;
+        len -= chunk;
+    }
+    return true;
+}
+
+bool SPI_STM::receive(uint8_t *buf, std::size_t len)
+{
+    while (len > 0) {
+        uint16_t chunk = len > UINT16_MAX ? UINT16_MAX : static_cast<uint16_t>(len);
+        if (!update_status(HAL_SPI_Receive(_hspi, buf, chunk, HAL_MAX_DELAY))) {
+            return false;
+        }
+        buf += chunk;
+        len -= chunk;
+    }
+    return true;
+}
+
+bool SPI_STM::transfer(const uint8_t *tx, uint8_t *rx, std::size_t len)
+{
+    while (len > 0) {
+        uint16_t chunk = len > UINT16_MAX ? UINT16_MAX : static_cast<uint16_t>(len);
+        if (!update_status(HAL_SPI_TransmitReceive(_hspi, const_cast<uint8_t*>(tx), rx, chunk, HAL_MAX_DELAY))) {
+            return false;
+        }
+        tx += chunk;
+        rx += chunk;
+        len -= chunk;
+    }
+    return true;
 }
 
 
 void SPI_STM::delay_ms(int ms)
 {
     HAL_Delay(ms);
+}
+
+uint32_t SPI_STM::last_status() const
+{
+    return _last_status;
+}
+
+uint32_t SPI_STM::last_error() const
+{
+    return _last_error;
 }

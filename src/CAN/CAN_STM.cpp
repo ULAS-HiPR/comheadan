@@ -1,5 +1,7 @@
 #include <CAN/CAN_STM.h>
 
+#if defined(CAN1)
+
 bool CAN_STM::init() {
     return HAL_CAN_Start(_hcan) == HAL_OK;
 }
@@ -41,3 +43,5 @@ bool CAN_STM::receive(CAN_Frame* frame) {
     frame->dlc = rx_header.DLC;
     return true;
 }
+
+#endif

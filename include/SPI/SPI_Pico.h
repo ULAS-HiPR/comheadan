@@ -11,11 +11,17 @@ class SPI_Pico : public SPI_Handler {
             printf("making spi -> i hate ardino and dont wanna write actual impl");
         }
 
-        void write(int cs, uint8_t reg, uint8_t *buf, uint16_t len) override ;
-        void read(int cs, uint8_t reg, uint8_t* buf, uint16_t len) override ;
+        bool write(int cs, uint8_t reg, uint8_t *buf, uint16_t len) override ;
+        bool read(int cs, uint8_t reg, uint8_t* buf, uint16_t len) override ;
         //used for BMP library which handles CS internally
-        void read_no_cs(uint8_t reg, uint8_t *buf, uint16_t len) override;
-        void write_no_cs(uint8_t* reg, uint8_t const *buf, uint16_t len) override;
+        bool read_no_cs(uint8_t reg, uint8_t *buf, uint16_t len) override;
+        bool write_no_cs(uint8_t reg, uint8_t const *buf, uint16_t len) override;
+
+        bool transmit(const uint8_t *data, std::size_t len) override;
+        bool receive(uint8_t *buf, std::size_t len) override;
+        bool transfer(const uint8_t *tx, uint8_t *rx, std::size_t len) override;
+        void cs_low() override;
+        void cs_high() override;
 
         void cs_select(int cs) override ;
         void cs_deselect(int cs) override ;

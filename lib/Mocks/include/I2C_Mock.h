@@ -7,8 +7,9 @@
 class I2C_Mock : public I2C_Handler {
     public:
         I2C_Mock(std::vector<int> read_data) : read_buffer(read_data) {};
-        void write(int addr, uint8_t* data, size_t len) override ;
-        void read(int addr, uint8_t data, uint8_t* buf, size_t len) override;
+        bool write(int addr, uint8_t* data, size_t len) override ;
+        bool read(int addr, uint8_t data, uint8_t* buf, size_t len) override;
+        bool is_ready(int addr, uint32_t trials = 2, uint32_t timeout_ms = 10) override;
         const std::vector<int>& getWriteBuffer() const ;
     private:
         std::vector<int> write_buffer;

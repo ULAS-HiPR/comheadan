@@ -6,25 +6,38 @@ void I2C_Pico::init() {
     Wire.begin();
 }
 
-void I2C_Pico::write(int addr, uint8_t* data, uint len) {
+bool I2C_Pico::write(int addr, uint8_t* data, std::size_t len) {
     Wire.beginTransmission(addr);
-    for (uint i = 0; i < len; ++i) {
+    for (std::size_t i = 0; i < len; ++i) {
         Wire.write(data[i]);
     }
-    Wire.endTransmission();
+    return Wire.endTransmission() == 0;
 }
 
-void I2C_Pico::read(int addr, uint8_t data, uint8_t* buf, uint len) {
+bool I2C_Pico::read(int addr, uint8_t data, uint8_t* buf, std::size_t len) {
     Wire.beginTransmission(addr);
     Wire.write(data);
-    Wire.endTransmission();
+    if (Wire.endTransmission(false) != 0) {
+        return false;
+    }
     
-    Wire.requestFrom(addr, len);
-    for (uint i = 0; i < len; ++i) {
+    if (Wire.requestFrom(addr, len) != len) {
+        return false;
+    }
+
+    for (std::size_t i = 0; i < len; ++i) {
         if (Wire.available()) {
             buf[i] = Wire.read();
+        } else {
+            return false;
         }
     }
+    return true;
 }
 
-#endif 
+bool I2C_Pico::is_ready(int addr, uint32_t, uint32_t) {
+    Wire.beginTransmission(addr);
+    return Wire.endTransmission() == 0;
+}
+
+#endif
