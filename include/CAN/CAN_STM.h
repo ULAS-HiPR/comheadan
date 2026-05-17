@@ -1,4 +1,5 @@
 #ifdef STM
+#ifdef CAN_COMPATIBLE
 #ifndef CAN_STM_H
 #define CAN_STM_H
 
@@ -9,7 +10,6 @@
 #include "stm32f0xx_hal.h"
 #endif
 
-#if defined(CAN1)
 class CAN_STM : public CAN_Handler {
     public:
         explicit CAN_STM(CAN_HandleTypeDef* hcan) : _hcan(hcan) {}
