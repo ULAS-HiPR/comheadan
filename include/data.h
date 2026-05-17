@@ -85,5 +85,12 @@ struct flash_internal_data {
     int last_log;
 };
 
+struct canards_raw
+{
+    float kp{0.0f};
+    float kd{0.0f};
+    float servo_angle{0.0f};
+};
+
 #endif // DATA_H
 
