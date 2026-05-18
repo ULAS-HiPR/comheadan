@@ -25,6 +25,7 @@
 #define CAN_ID_POWER_SERVO    0x310
 #define CAN_ID_TX_STATUS      0x340
 #define CAN_ID_SYNC           0x350
+#define CAN_ID_TX_DOWNLINK    0x380
 
 // Priority 4 — LOW
 #define CAN_ID_HEARTBEAT      0x420
@@ -34,12 +35,13 @@
 // Magic Word
 #define PYRO_MAGIC            0xDEAD
 
-// Heartbeats
+// Node IDs
 #define NODE_CROI             0x01  // flight computer
-#define NODE_PLEASC           0x02  // pyro board
-#define NODE_LAMH             0x03  // servo board
-#define NODE_TEACHTAIRE       0x04  // telemetry board
-#define NODE_MUON             0x05  // muon detector
+#define NODE_TEACHTAIRE       0x02  // telemetry board
+#define NODE_FOINSE           0x03  // power sled
+#define NODE_PLEASC           0x04  // pyro board
+#define NODE_LAMH             0x05  // canards/servo board
+#define NODE_MU               0x06  // muon detector
 
 // Flight state enum (I have no idea if this is correct)
 enum class FlightState : uint8_t {
@@ -179,6 +181,13 @@ struct __attribute__((packed)) TX_STATUS_Payload {
     int8_t  snr;
     uint8_t tx_queue;
     uint8_t flags;
+};
+
+
+// Croi -> Teachtaire telemetry bundle, sent as 3 sequential frames (seq 0,1,2)
+struct __attribute__((packed)) TX_DOWNLINK_Payload {
+    uint8_t seq;        // 0, 1, or 2 — which chunk of the bundle
+    uint8_t data[7];    // raw bundle bytes for this chunk
 };
 
 
