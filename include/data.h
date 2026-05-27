@@ -93,5 +93,16 @@ struct canards_raw
     bool active{false};
 };
 
+enum State {
+    CALIBRATING,
+    READY,
+    POWERED,
+    COASTING,
+    DROUGE,
+    MAIN,
+    LANDED,
+    NUM_STATES
+};
+
 #endif // DATA_H
 
