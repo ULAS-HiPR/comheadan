@@ -1,5 +1,17 @@
 #include <SPI/SPI_STM.h>
+
+#ifdef STM
+
+#if defined(__has_include)
+#if __has_include("cmsis_os.h")
 #include "cmsis_os.h"
+#define COMHEADAN_HAS_CMSIS_OS 1
+#endif
+#endif
+
+#ifndef COMHEADAN_HAS_CMSIS_OS
+#define COMHEADAN_HAS_CMSIS_OS 0
+#endif
 
 SPI_STM::SPI_STM(SPI_HandleTypeDef* hspi, GPIO_TypeDef* cs_port, uint16_t cs_pin) : _hspi(hspi), _cs_port(cs_port), _cs_pin(cs_pin)
     , _last_status(HAL_OK), _last_error(0)
@@ -65,6 +77,12 @@ bool SPI_STM::write_no_cs(uint8_t reg, const uint8_t *buf, uint16_t len)
 
 bool SPI_STM::transmit(const uint8_t *data, std::size_t len)
 {
+    if ((data == nullptr) && (len > 0U)) {
+        _last_status = HAL_ERROR;
+        _last_error = HAL_SPI_ERROR_FLAG;
+        return false;
+    }
+
     while (len > 0) {
         uint16_t chunk = len > UINT16_MAX ? UINT16_MAX : static_cast<uint16_t>(len);
         if (!update_status(HAL_SPI_Transmit(_hspi, const_cast<uint8_t*>(data), chunk, HAL_MAX_DELAY))) {
@@ -78,6 +96,12 @@ bool SPI_STM::transmit(const uint8_t *data, std::size_t len)
 
 bool SPI_STM::receive(uint8_t *buf, std::size_t len)
 {
+    if ((buf == nullptr) && (len > 0U)) {
+        _last_status = HAL_ERROR;
+        _last_error = HAL_SPI_ERROR_FLAG;
+        return false;
+    }
+
     while (len > 0) {
         uint16_t chunk = len > UINT16_MAX ? UINT16_MAX : static_cast<uint16_t>(len);
         if (!update_status(HAL_SPI_Receive(_hspi, buf, chunk, HAL_MAX_DELAY))) {
@@ -91,6 +115,12 @@ bool SPI_STM::receive(uint8_t *buf, std::size_t len)
 
 bool SPI_STM::transfer(const uint8_t *tx, uint8_t *rx, std::size_t len)
 {
+    if (((tx == nullptr) || (rx == nullptr)) && (len > 0U)) {
+        _last_status = HAL_ERROR;
+        _last_error = HAL_SPI_ERROR_FLAG;
+        return false;
+    }
+
     while (len > 0) {
         uint16_t chunk = len > UINT16_MAX ? UINT16_MAX : static_cast<uint16_t>(len);
         if (!update_status(HAL_SPI_TransmitReceive(_hspi, const_cast<uint8_t*>(tx), rx, chunk, HAL_MAX_DELAY))) {
@@ -110,10 +140,12 @@ void SPI_STM::delay_ms(int ms)
         return;
     }
 
+#if COMHEADAN_HAS_CMSIS_OS
     if (osKernelGetState() == osKernelRunning) {
         osDelay(static_cast<uint32_t>(ms));
         return;
     }
+#endif
 
     for (int remaining = 0; remaining < ms; ++remaining) {
         volatile uint32_t cycles = SystemCoreClock / 8000U;
@@ -132,3 +164,5 @@ uint32_t SPI_STM::last_error() const
 {
     return _last_error;
 }
+
+#endif
