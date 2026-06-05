@@ -85,5 +85,24 @@ struct flash_internal_data {
     int last_log;
 };
 
+struct canards_raw
+{
+    float kp{0.0f};
+    float kd{0.0f};
+    float servo_angle{0.0f};
+    bool active{false};
+};
+
+enum State {
+    CALIBRATING,
+    READY,
+    POWERED,
+    COASTING,
+    DROUGE,
+    MAIN,
+    LANDED,
+    NUM_STATES
+};
+
 #endif // DATA_H
 
