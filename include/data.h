@@ -11,6 +11,7 @@ struct accle_data
     float z{0};
 };
 
+//6 bytes
 struct gyro_data
 {
     int16_t x{0};
@@ -18,7 +19,7 @@ struct gyro_data
     int16_t z{0};
 };
 
-//10 bytes update
+//12 bytes update
 struct baro_data
 {
     int32_t pressure{101325};
@@ -26,11 +27,12 @@ struct baro_data
     float altitude{0};
 };
 
+//18 bytes
 struct imu_data
 {
     accle_data acceleration;
     gyro_data gyro;
-    int temperature; //check this
+    int temperature; //check this 
 };
 
 
@@ -42,7 +44,7 @@ struct prediction_data
     float acceleration{0};
 };
 
-//188 bits (no predict)  -> not true any more
+// 32 bytes
 struct core_flight_data
 {
     uint32_t time{0};
@@ -70,12 +72,13 @@ struct secondary_flight_data
    // imu_data imu;
 };
 
+// 52 bytes
 struct flight_data
 {
     uint32_t time{0};
     prediction_data prediction;
     core_flight_data core_data;
-    int state;
+    int16_t state;
 };
 
 struct flash_internal_data {
@@ -85,6 +88,8 @@ struct flash_internal_data {
     int last_log;
 };
 
+
+// 13 btyes
 struct canards_raw
 {
     float kp{0.0f};

@@ -82,8 +82,7 @@ struct __attribute__((packed)) IMU_GYRO_Payload {
 struct __attribute__((packed)) BARO_Payload {
     uint32_t pressure;
     int16_t  temp;
-    uint8_t  seq;
-    uint8_t  flags;
+    uint16_t timestamp_ms;
 };
 
 
