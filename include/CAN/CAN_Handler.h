@@ -5,6 +5,7 @@
 
 class CAN_Handler {
     public:
+        virtual bool init() = 0;
         virtual bool send(CAN_Frame* frame) = 0;
         virtual bool receive(CAN_Frame* frame) = 0;
         virtual ~CAN_Handler() = default;
