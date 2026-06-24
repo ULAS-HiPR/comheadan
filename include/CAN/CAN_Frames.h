@@ -191,11 +191,14 @@ struct __attribute__((packed)) MUON_CPM_Payload {
 //F unctions to help pack the frames
 template<typename T>
 inline CAN_Frame pack_frame(uint32_t id, const T& payload) {
-    static_assert(sizeof(T) <= 8, "No bueno payload too big"); // compile time error checking
-    CAN_Frame frame;
+    static_assert(sizeof(T) <= 8, "Payload too big"); // compile time error checking
+    CAN_Frame frame{};
     frame.id  = id;
-    frame.dlc = static_cast<uint8_t>(sizeof(T));
+    frame.dlc = 8;  // force full frame
+
+    memset(frame.data, 0, 8);
     memcpy(frame.data, &payload, sizeof(T));
+
     return frame;
 }
 

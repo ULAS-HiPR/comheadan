@@ -12,8 +12,8 @@
 
 class CAN_STM : public CAN_Handler {
     public:
-        explicit CAN_STM(CAN_HandleTypeDef* hcan) : _hcan(hcan) {}
-        bool init();
+        explicit CAN_STM(CAN_HandleTypeDef* hcan) : _hcan(hcan) {} ;
+        bool init() override;
         bool send(CAN_Frame* frame) override;
         bool receive(CAN_Frame* frame) override;
 
