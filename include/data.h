@@ -30,9 +30,9 @@ struct baro_data
 //18 bytes
 struct imu_data
 {
-    accle_data acceleration;
-    gyro_data gyro;
-    int temperature; //check this 
+    accle_data acceleration{};
+    gyro_data gyro{};
+    int temperature{0}; //check this 
 };
 
 
@@ -48,27 +48,27 @@ struct prediction_data
 struct core_flight_data
 {
     uint32_t time{0};
-    baro_data barometer;
-    imu_data imu;
+    baro_data barometer{};
+    imu_data imu{};
 };
 
 //25 bytes
 struct gps_data
 {
-    double latitude;
-    double longitude;
-    float altitude;
-    float velocity;
-    uint8_t satellites;
+    double latitude{0.0};
+    double longitude{0.0};
+    float altitude{0.0f};
+    float velocity{0.0f};
+    uint8_t satellites{0U};
 };
 
 
 //39 bytes
 struct secondary_flight_data
 {
-    uint16_t time;
-    gps_data gps;
-    accle_data acceleration;
+    uint16_t time{0U};
+    gps_data gps{};
+    accle_data acceleration{};
    // imu_data imu;
 };
 
@@ -76,16 +76,16 @@ struct secondary_flight_data
 struct flight_data
 {
     uint32_t time{0};
-    prediction_data prediction;
-    core_flight_data core_data;
-    int16_t state;
+    prediction_data prediction{};
+    core_flight_data core_data{};
+    int16_t state{0};
 };
 
 struct flash_internal_data {
-    int main_height;
-    int drouge_delay;
-    int liftoff_thresh;
-    int last_log;
+    int main_height{200};
+    int drouge_delay{0};
+    int liftoff_thresh{20};
+    int last_log{0};
 };
 
 
