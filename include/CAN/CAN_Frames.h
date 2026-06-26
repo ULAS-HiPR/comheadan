@@ -27,8 +27,14 @@
 #define CAN_ID_SYNC           0x350
 
 // Priority 4 — LOW
-#define CAN_ID_HEARTBEAT      0x420
+#define CAN_ID_HEARTBEAT_BASE 0x420
+#define CAN_ID_HEARTBEAT      CAN_ID_HEARTBEAT_BASE
 #define CAN_ID_MUON_CPM       0x430
+
+#define CAN_ID_HEARTBEAT_NODE(node_id) \
+    (CAN_ID_HEARTBEAT_BASE | ((node_id) & 0x0F))
+#define CAN_ID_IS_HEARTBEAT(id) \
+    (((id) & 0x7F0U) == CAN_ID_HEARTBEAT_BASE)
 
 
 // Magic Word
@@ -40,6 +46,12 @@
 #define NODE_LAMH             0x03  // servo board
 #define NODE_TEACHTAIRE       0x04  // telemetry board
 #define NODE_MUON             0x05  // muon detector
+#define NODE_FOINSE           0x06  // power board
+
+#define CAN_HEARTBEAT_ERR_BUS_OFF      0x01
+#define CAN_HEARTBEAT_ERR_CAN_ERROR    0x02
+#define CAN_HEARTBEAT_ERR_TX_DROP      0x04
+#define CAN_HEARTBEAT_ERR_NODE_TIMEOUT 0x08
 
 // Flight state enum (I have no idea if this is correct)
 enum class FlightState : uint8_t {
@@ -82,8 +94,7 @@ struct __attribute__((packed)) IMU_GYRO_Payload {
 struct __attribute__((packed)) BARO_Payload {
     uint32_t pressure;
     int16_t  temp;
-    uint8_t  seq;
-    uint8_t  flags;
+    uint16_t timestamp_ms;
 };
 
 
@@ -192,17 +203,34 @@ struct __attribute__((packed)) MUON_CPM_Payload {
 //F unctions to help pack the frames
 template<typename T>
 inline CAN_Frame pack_frame(uint32_t id, const T& payload) {
-    static_assert(sizeof(T) <= 8, "No bueno payload too big"); // compile time error checking
-    CAN_Frame frame;
+    static_assert(sizeof(T) <= 8, "CAN payload too big");
+    CAN_Frame frame{};
     frame.id  = id;
-    frame.dlc = static_cast<uint8_t>(sizeof(T));
+    frame.dlc = 8;
+    memset(frame.data, 0, sizeof(frame.data));
     memcpy(frame.data, &payload, sizeof(T));
     return frame;
 }
 
 template<typename T>
 inline void unpack_frame(const CAN_Frame& frame, T& payload) {
+    static_assert(sizeof(T) <= 8, "CAN payload too big");
+    memset(&payload, 0, sizeof(T));
+    const uint8_t bytes_to_copy = frame.dlc < sizeof(T)
+                                ? frame.dlc
+                                : static_cast<uint8_t>(sizeof(T));
+    memcpy(&payload, frame.data, bytes_to_copy);
+}
+
+template<typename T>
+inline bool try_unpack_frame(const CAN_Frame& frame, T& payload) {
+    static_assert(sizeof(T) <= 8, "CAN payload too big");
+    if (frame.dlc < sizeof(T) || frame.dlc > 8U) {
+        memset(&payload, 0, sizeof(T));
+        return false;
+    }
     memcpy(&payload, frame.data, sizeof(T));
+    return true;
 }
 
 #endif

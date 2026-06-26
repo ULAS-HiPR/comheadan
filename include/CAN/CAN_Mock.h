@@ -9,7 +9,7 @@ class CAN_MOCK : public CAN_Handler {
 public:
     CAN_MOCK() = default;
 
-    bool init() {
+    bool init() override {
         printf("[CAN_MOCK] init()\n");
         return true;
     }
