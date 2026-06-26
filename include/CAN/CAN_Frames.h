@@ -31,6 +31,7 @@
 #define CAN_ID_HEARTBEAT_BASE 0x420
 #define CAN_ID_HEARTBEAT      CAN_ID_HEARTBEAT_BASE
 #define CAN_ID_MUON_CPM       0x430
+#define CAN_ID_CANARDS        0x440 //also used for airbrakes
 
 #define CAN_ID_HEARTBEAT_NODE(node_id) \
     (CAN_ID_HEARTBEAT_BASE | ((node_id) & 0x0F))
@@ -207,6 +208,13 @@ struct __attribute__((packed)) GPS_Payload {
     uint8_t flags;
 };
 
+struct __attribute__((packed)) CanardsPayload
+{
+    int16_t kp;           // scaled: kp * 1000
+    int16_t kd;           // scaled: kd * 1000
+    int16_t servo_angle;  // scaled: degrees * 100
+    uint8_t active;
+};
 
 //F unctions to help pack the frames
 template<typename T>
@@ -262,27 +270,26 @@ inline CAN_Frame pack_gps(uint32_t id, int32_t lat, int32_t lon, uint8_t sat, ui
     return frame;
 }
 
-inline void unpack_gps(const CAN_Frame& frame,
-                        int32_t& lat,
-                        int32_t& lon,
-                        uint8_t& sat,
-                        uint8_t& flags)
+inline bool unpack_gps(const CAN_Frame& frame,
+                        GPS_Payload& payload)
 {
-    lat = (int32_t)((frame.data[0] << 16) |
+    payload.latitude = (int32_t)((frame.data[0] << 16) |
                     (frame.data[1] << 8) |
                     (frame.data[2]));
 
     // sign extend 24-bit
-    if (lat & 0x800000) lat |= 0xFF000000;
+    if (payload.latitude & 0x800000) payload.latitude |= 0xFF000000;
 
-    lon = (int32_t)((frame.data[3] << 16) |
+    payload.longitude = (int32_t)((frame.data[3] << 16) |
                     (frame.data[4] << 8) |
                     (frame.data[5]));
 
-    if (lon & 0x800000) lon |= 0xFF000000;
+    if (payload.longitude & 0x800000) payload.longitude |= 0xFF000000;
 
-    sat   = frame.data[6];
-    flags = frame.data[7];
+    payload.satellites   = frame.data[6];
+    payload.flags = frame.data[7];
+
+    return true;
 }
 
 inline int32_t gps_encode(double deg)

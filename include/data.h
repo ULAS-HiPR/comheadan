@@ -98,13 +98,19 @@ static inline std::size_t pack_gps(const gps_data& in, uint8_t* out_buffer, bool
     return sizeof(pkt);
 }
 
-//39 bytes
+/// 13 btyes
+struct canards_raw
+{
+    float kp{0.0f};
+    float kd{0.0f};
+    float servo_angle{0.0f};
+    bool active{false};
+};
+
 struct secondary_flight_data
 {
-    uint16_t time{0U};
     gps_data gps{};
-    accle_data acceleration{};
-   // imu_data imu;
+    canards_raw canards{};
 };
 
 // 52 bytes
@@ -124,14 +130,7 @@ struct flash_internal_data {
 };
 
 
-// 13 btyes
-struct canards_raw
-{
-    float kp{0.0f};
-    float kd{0.0f};
-    float servo_angle{0.0f};
-    bool active{false};
-};
+
 
 enum State {
     CALIBRATING,
