@@ -2,6 +2,7 @@
 #define DATA_H
 #include <stdio.h>
 #include <cstdint>
+#include <cstring>
 
 //12 bytes
 struct accle_data
@@ -62,6 +63,40 @@ struct gps_data
     uint8_t satellites{0U};
 };
 
+struct __attribute__((packed)) gps_packet_t
+{
+    int32_t latitude;
+    int32_t longitude;
+    int16_t altitude;
+    int16_t velocity;
+    uint8_t satellites;
+    uint8_t gps_valid;
+};
+
+static inline std::size_t pack_gps(const gps_data& in, uint8_t* out_buffer, bool gps_valid)
+{
+    gps_packet_t pkt;
+
+    if (gps_valid) {
+        pkt.latitude  = static_cast<int32_t>(in.latitude * 1e7);
+        pkt.longitude = static_cast<int32_t>(in.longitude * 1e7);
+        pkt.altitude  = static_cast<int16_t>(in.altitude * 10.0f);
+        pkt.velocity  = static_cast<int16_t>(in.velocity * 10.0f);
+        pkt.satellites = in.satellites;
+    } else {
+        // safe fallback values
+        pkt.latitude   = 0;
+        pkt.longitude  = 0;
+        pkt.altitude   = 0;
+        pkt.velocity   = 0;
+        pkt.satellites = 0;
+    }
+
+    pkt.gps_valid = gps_valid ? 1 : 0;
+
+    std::memcpy(out_buffer, &pkt, sizeof(pkt));
+    return sizeof(pkt);
+}
 
 //39 bytes
 struct secondary_flight_data
