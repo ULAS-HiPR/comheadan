@@ -25,6 +25,7 @@
 #define CAN_ID_POWER_SERVO    0x310
 #define CAN_ID_TX_STATUS      0x340
 #define CAN_ID_SYNC           0x350
+#define CAN_ID_GPS            0x360
 
 // Priority 4 — LOW
 #define CAN_ID_HEARTBEAT_BASE 0x420
@@ -199,6 +200,13 @@ struct __attribute__((packed)) MUON_CPM_Payload {
     uint16_t reserved;
 };
 
+struct __attribute__((packed)) GPS_Payload {
+    int32_t latitude;     // store as int32 but only 24-bit range
+    int32_t longitude;   
+    uint8_t satellites;
+    uint8_t flags;
+};
+
 
 //F unctions to help pack the frames
 template<typename T>
@@ -231,6 +239,60 @@ inline bool try_unpack_frame(const CAN_Frame& frame, T& payload) {
     }
     memcpy(&payload, frame.data, sizeof(T));
     return true;
+}
+
+//gps specifc cause 24 bit lat/lon and 8 bit sat and flags
+inline CAN_Frame pack_gps(uint32_t id, int32_t lat, int32_t lon, uint8_t sat, uint8_t flags)
+{
+    CAN_Frame frame{};
+    frame.id = id;
+    frame.dlc = 8;
+
+    frame.data[0] = (lat >> 16) & 0xFF;
+    frame.data[1] = (lat >> 8) & 0xFF;
+    frame.data[2] = (lat) & 0xFF;
+
+    frame.data[3] = (lon >> 16) & 0xFF;
+    frame.data[4] = (lon >> 8) & 0xFF;
+    frame.data[5] = (lon) & 0xFF;
+
+    frame.data[6] = sat;
+    frame.data[7] = flags;
+
+    return frame;
+}
+
+inline void unpack_gps(const CAN_Frame& frame,
+                        int32_t& lat,
+                        int32_t& lon,
+                        uint8_t& sat,
+                        uint8_t& flags)
+{
+    lat = (int32_t)((frame.data[0] << 16) |
+                    (frame.data[1] << 8) |
+                    (frame.data[2]));
+
+    // sign extend 24-bit
+    if (lat & 0x800000) lat |= 0xFF000000;
+
+    lon = (int32_t)((frame.data[3] << 16) |
+                    (frame.data[4] << 8) |
+                    (frame.data[5]));
+
+    if (lon & 0x800000) lon |= 0xFF000000;
+
+    sat   = frame.data[6];
+    flags = frame.data[7];
+}
+
+inline int32_t gps_encode(double deg)
+{
+    return (int32_t)(deg * 1e6);   // 0.1m-ish resolution
+}
+
+inline double gps_decode(int32_t raw)
+{
+    return (double)raw / 1e6;
 }
 
 #endif
