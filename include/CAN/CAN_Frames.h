@@ -10,9 +10,10 @@
 #define CAN_ID_IMU_GYRO       0x010
 #define CAN_ID_BARO           0x020
 #define CAN_ID_FLIGHT_STATE   0x030
-#define CAN_ID_PYRO_ARM       0x040
-#define CAN_ID_PYRO_FIRE      0x050
-#define CAN_ID_KALMANN        0x060
+#define CAN_ID_KALMANN        0x040
+#define CAN_ID_PYRO_ARM       0x050
+#define CAN_ID_PYRO_FIRE      0x060
+
 
 
 // Priority 2 — MEDIUM
