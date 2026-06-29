@@ -10,10 +10,9 @@
 #define CAN_ID_IMU_GYRO       0x010
 #define CAN_ID_BARO           0x020
 #define CAN_ID_FLIGHT_STATE   0x030
-#define CAN_ID_PYRO_ARM       0x040
-#define CAN_ID_PYRO_FIRE      0x050
-#define CAN_ID_KALMANN        0x060
-
+#define CAN_ID_KALMANN        0x040
+#define CAN_ID_PYRO_ARM       0x050
+#define CAN_ID_PYRO_FIRE      0x060
 
 // Priority 2 — MEDIUM
 #define CAN_ID_PYRO_STATUS    0x200
@@ -92,11 +91,10 @@ struct __attribute__((packed)) IMU_GYRO_Payload {
     uint16_t timestamp_ms;
 };
 
-// Bitmask flags to be determiined
 struct __attribute__((packed)) BARO_Payload {
-    uint32_t pressure;
-    int16_t  temp;
-    uint16_t timestamp_ms;
+    uint32_t pressure;  // 4 bytes
+    int16_t  temp;      // 2 bytes
+    int16_t  altitude;  // 2 bytes
 };
 
 
