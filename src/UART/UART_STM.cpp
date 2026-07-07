@@ -71,40 +71,32 @@ std::size_t UART_STM::read(std::uint8_t* data, std::size_t len, std::uint32_t ti
     }
 
     std::size_t received = 0U;
+    USART_TypeDef* usart = _huart->Instance;
 
     while (received < len) {
-        std::uint32_t cleared_error = clear_uart_error_flags(_huart);
-        if (cleared_error != 0U) {
-            _last_status = HAL_ERROR;
-            _last_error = cleared_error;
+        // Wait for RXNE
+        if (!(usart->ISR & USART_ISR_RXNE)) {
+            if (timeout_ms == 0U) {
+                break;
+            }
+            uint32_t start = HAL_GetTick();
+            while (!(usart->ISR & USART_ISR_RXNE)) {
+                if ((HAL_GetTick() - start) >= timeout_ms) {
+                    return received;
+                }
+            }
         }
 
-        if ((timeout_ms == 0U) && !byte_available()) {
-            break;
-        }
+        // Read byte FIRST — this clears RXNE naturally
+        data[received++] = static_cast<uint8_t>(usart->RDR & 0xFFU);
 
-        HAL_StatusTypeDef status = HAL_UART_Receive(
-            _huart,
-            &data[received],
-            1U,
-            timeout_ms
-        );
-
-        if (status == HAL_OK) {
-            update_status(status);
-            received++;
-            continue;
-        }
-
-        if (status == HAL_TIMEOUT) {
-            update_status(status);
-            break;
-        }
-
-        update_status(status);
-        break;
+        // NOW safe to clear any error flags — byte already consumed
+        if (usart->ISR & (USART_ISR_ORE | USART_ISR_FE | USART_ISR_NE | USART_ISR_PE)) {
+    usart->ICR = USART_ICR_ORECF | USART_ICR_FECF | USART_ICR_NCF | USART_ICR_PECF;
+}
     }
 
+    _last_status = HAL_OK;
     return received;
 }
 
