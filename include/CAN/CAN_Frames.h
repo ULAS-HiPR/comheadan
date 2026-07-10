@@ -212,13 +212,16 @@ enum : uint8_t {
     ACTUATOR_COMMAND_FLAG_ACTIVE = 0x01U,
 };
 
+constexpr uint16_t ACTUATOR_COMMAND_MIN_LEASE_MS = 500U;
+constexpr uint16_t ACTUATOR_COMMAND_MAX_LEASE_MS = 2000U;
+
 struct __attribute__((packed)) ActuatorCommandPayload
 {
     uint8_t output_index;
     uint8_t flags;
     int16_t angle_cdeg;
     uint16_t sequence;
-    uint16_t reserved;
+    uint16_t lease_ms;
 };
 static_assert(sizeof(ActuatorCommandPayload) == 8U, "actuator command must occupy one CAN frame");
 
