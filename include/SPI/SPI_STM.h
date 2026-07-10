@@ -50,8 +50,8 @@ class SPI_STM : public SPI_Handler {
         uint16_t _cs_pin;
         uint32_t _last_status;
         uint32_t _last_error;
-
-         
+        bool _bus_mutex_acquired;
+        bool _bus_lock_failed;
 };
 
 
