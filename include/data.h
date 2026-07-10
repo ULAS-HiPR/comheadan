@@ -87,8 +87,8 @@ static inline std::size_t pack_gps(const gps_data& in, uint8_t* out_buffer, bool
 
 struct canards_raw
 {
-    float kp{0.0f};
-    float kd{0.0f};
+    uint8_t output_index{0U};
+    uint16_t sequence{0U};
     float servo_angle{0.0f};
     bool active{false};
 };
@@ -109,9 +109,9 @@ struct flight_data
 
 struct flash_internal_data
 {
-    int main_height{200};
-    int drouge_delay{0};
-    int liftoff_thresh{20};
+    int main_height_m{200};
+    uint32_t drogue_delay_ms{0U};
+    uint32_t liftoff_accel_m_s2_x100{2000U};
     int last_log{0};
 };
 

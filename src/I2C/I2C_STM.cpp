@@ -1,5 +1,9 @@
 #include <I2C/I2C_STM.h>
 
+namespace {
+constexpr uint32_t kI2cTransferTimeoutMs = 100U;
+}
+
 #ifdef COMHEADAN_USE_SERVO_DEBUG
 #include <servo_debug.h>
 #endif
@@ -77,20 +81,23 @@ bool I2C_STM::update_status(HAL_StatusTypeDef status) {
 bool I2C_STM::write(int addr, uint8_t* data, std::size_t len) {
     debug_write(addr, (len > 0 && data != nullptr) ? data[0] : 0, len);
 
-    HAL_StatusTypeDef status = HAL_I2C_Master_Transmit(_hi2c, addr << 1, data, len, HAL_MAX_DELAY);
+    HAL_StatusTypeDef status = HAL_I2C_Master_Transmit(
+        _hi2c, addr << 1, data, len, kI2cTransferTimeoutMs);
     return update_status(status);
 }
 
 bool I2C_STM::read(int addr, uint8_t data, uint8_t* buf, std::size_t len) {
     debug_read_reg(addr, data);
 
-    HAL_StatusTypeDef status = HAL_I2C_Master_Transmit(_hi2c, addr << 1, &data, 1, HAL_MAX_DELAY);
+    HAL_StatusTypeDef status = HAL_I2C_Master_Transmit(
+        _hi2c, addr << 1, &data, 1, kI2cTransferTimeoutMs);
     if (!update_status(status)) {
         return false;
     }
 
     debug_read_data(len);
-    status = HAL_I2C_Master_Receive(_hi2c, addr << 1, buf, len, HAL_MAX_DELAY);
+    status = HAL_I2C_Master_Receive(
+        _hi2c, addr << 1, buf, len, kI2cTransferTimeoutMs);
     return update_status(status);
 }
 

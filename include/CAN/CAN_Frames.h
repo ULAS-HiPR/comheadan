@@ -5,6 +5,7 @@
 #include <cstring>
 
 
+
 // Priority 0 — CRITICAL
 #define CAN_ID_IMU_ACCEL      0x000
 #define CAN_ID_IMU_GYRO       0x010
@@ -30,7 +31,8 @@
 #define CAN_ID_HEARTBEAT_BASE 0x420
 #define CAN_ID_HEARTBEAT      CAN_ID_HEARTBEAT_BASE
 #define CAN_ID_MUON_CPM       0x430
-#define CAN_ID_CANARDS        0x440 //also used for airbrakes
+#define CAN_ID_ACTUATOR_COMMAND 0x440
+#define CAN_ID_CANARDS        CAN_ID_ACTUATOR_COMMAND
 
 #define CAN_ID_HEARTBEAT_NODE(node_id) \
     (CAN_ID_HEARTBEAT_BASE | ((node_id) & 0x0F))
@@ -206,13 +208,19 @@ struct __attribute__((packed)) GPS_Payload {
     uint8_t flags;
 };
 
-struct __attribute__((packed)) CanardsPayload
-{
-    int16_t kp;           // scaled: kp * 1000
-    int16_t kd;           // scaled: kd * 1000
-    int16_t servo_angle;  // scaled: degrees * 100
-    uint8_t active;
+enum : uint8_t {
+    ACTUATOR_COMMAND_FLAG_ACTIVE = 0x01U,
 };
+
+struct __attribute__((packed)) ActuatorCommandPayload
+{
+    uint8_t output_index;
+    uint8_t flags;
+    int16_t angle_cdeg;
+    uint16_t sequence;
+    uint16_t reserved;
+};
+static_assert(sizeof(ActuatorCommandPayload) == 8U, "actuator command must occupy one CAN frame");
 
 //F unctions to help pack the frames
 template<typename T>
@@ -290,14 +298,24 @@ inline bool unpack_gps(const CAN_Frame& frame,
     return true;
 }
 
+// Signed 24-bit values cannot carry degrees * 1e6 globally. Map the complete
+// [-180, 180] degree range into the available signed 24-bit range instead.
+constexpr double CAN_GPS_24BIT_SCALE = 8388607.0 / 180.0;
+
 inline int32_t gps_encode(double deg)
 {
-    return (int32_t)(deg * 1e6);   // 0.1m-ish resolution
+    if (deg > 180.0) {
+        deg = 180.0;
+    } else if (deg < -180.0) {
+        deg = -180.0;
+    }
+    const double scaled = deg * CAN_GPS_24BIT_SCALE;
+    return static_cast<int32_t>(scaled >= 0.0 ? scaled + 0.5 : scaled - 0.5);
 }
 
 inline double gps_decode(int32_t raw)
 {
-    return (double)raw / 1e6;
+    return static_cast<double>(raw) / CAN_GPS_24BIT_SCALE;
 }
 
 #endif

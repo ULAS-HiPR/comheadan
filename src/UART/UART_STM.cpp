@@ -2,34 +2,6 @@
 
 #ifdef STM
 
-namespace {
-
-std::uint32_t clear_uart_error_flags(UART_HandleTypeDef* huart)
-{
-    std::uint32_t error = 0U;
-
-    if (__HAL_UART_GET_FLAG(huart, UART_FLAG_ORE) != RESET) {
-        __HAL_UART_CLEAR_OREFLAG(huart);
-        error |= HAL_UART_ERROR_ORE;
-    }
-    if (__HAL_UART_GET_FLAG(huart, UART_FLAG_FE) != RESET) {
-        __HAL_UART_CLEAR_FEFLAG(huart);
-        error |= HAL_UART_ERROR_FE;
-    }
-    if (__HAL_UART_GET_FLAG(huart, UART_FLAG_NE) != RESET) {
-        __HAL_UART_CLEAR_NEFLAG(huart);
-        error |= HAL_UART_ERROR_NE;
-    }
-    if (__HAL_UART_GET_FLAG(huart, UART_FLAG_PE) != RESET) {
-        __HAL_UART_CLEAR_PEFLAG(huart);
-        error |= HAL_UART_ERROR_PE;
-    }
-
-    return error;
-}
-
-} // namespace
-
 UART_STM::UART_STM(UART_HandleTypeDef* huart)
     : _huart(huart), _last_status(HAL_OK), _last_error(0)
 {
@@ -82,6 +54,7 @@ std::size_t UART_STM::read(std::uint8_t* data, std::size_t len, std::uint32_t ti
             uint32_t start = HAL_GetTick();
             while (!(usart->ISR & USART_ISR_RXNE)) {
                 if ((HAL_GetTick() - start) >= timeout_ms) {
+                    _last_status = HAL_TIMEOUT;
                     return received;
                 }
             }
@@ -91,9 +64,16 @@ std::size_t UART_STM::read(std::uint8_t* data, std::size_t len, std::uint32_t ti
         data[received++] = static_cast<uint8_t>(usart->RDR & 0xFFU);
 
         // NOW safe to clear any error flags — byte already consumed
-        if (usart->ISR & (USART_ISR_ORE | USART_ISR_FE | USART_ISR_NE | USART_ISR_PE)) {
-    usart->ICR = USART_ICR_ORECF | USART_ICR_FECF | USART_ICR_NCF | USART_ICR_PECF;
-}
+        const uint32_t error_flags =
+            usart->ISR & (USART_ISR_ORE | USART_ISR_FE | USART_ISR_NE | USART_ISR_PE);
+        if (error_flags != 0U) {
+            if ((error_flags & USART_ISR_ORE) != 0U) _last_error |= HAL_UART_ERROR_ORE;
+            if ((error_flags & USART_ISR_FE) != 0U) _last_error |= HAL_UART_ERROR_FE;
+            if ((error_flags & USART_ISR_NE) != 0U) _last_error |= HAL_UART_ERROR_NE;
+            if ((error_flags & USART_ISR_PE) != 0U) _last_error |= HAL_UART_ERROR_PE;
+            usart->ICR = USART_ICR_ORECF | USART_ICR_FECF |
+                         USART_ICR_NCF | USART_ICR_PECF;
+        }
     }
 
     _last_status = HAL_OK;

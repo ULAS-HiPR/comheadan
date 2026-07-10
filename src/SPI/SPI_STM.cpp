@@ -13,6 +13,10 @@
 #define COMHEADAN_HAS_CMSIS_OS 0
 #endif
 
+namespace {
+constexpr uint32_t kSpiTransferTimeoutMs = 100U;
+}
+
 SPI_STM::SPI_STM(SPI_HandleTypeDef* hspi, GPIO_TypeDef* cs_port, uint16_t cs_pin) : _hspi(hspi), _cs_port(cs_port), _cs_pin(cs_pin)
     , _last_status(HAL_OK), _last_error(0)
 {
@@ -85,7 +89,8 @@ bool SPI_STM::transmit(const uint8_t *data, std::size_t len)
 
     while (len > 0) {
         uint16_t chunk = len > UINT16_MAX ? UINT16_MAX : static_cast<uint16_t>(len);
-        if (!update_status(HAL_SPI_Transmit(_hspi, const_cast<uint8_t*>(data), chunk, HAL_MAX_DELAY))) {
+        if (!update_status(HAL_SPI_Transmit(
+                _hspi, const_cast<uint8_t*>(data), chunk, kSpiTransferTimeoutMs))) {
             return false;
         }
         data += chunk;
@@ -104,7 +109,7 @@ bool SPI_STM::receive(uint8_t *buf, std::size_t len)
 
     while (len > 0) {
         uint16_t chunk = len > UINT16_MAX ? UINT16_MAX : static_cast<uint16_t>(len);
-        if (!update_status(HAL_SPI_Receive(_hspi, buf, chunk, HAL_MAX_DELAY))) {
+        if (!update_status(HAL_SPI_Receive(_hspi, buf, chunk, kSpiTransferTimeoutMs))) {
             return false;
         }
         buf += chunk;
@@ -123,7 +128,8 @@ bool SPI_STM::transfer(const uint8_t *tx, uint8_t *rx, std::size_t len)
 
     while (len > 0) {
         uint16_t chunk = len > UINT16_MAX ? UINT16_MAX : static_cast<uint16_t>(len);
-        if (!update_status(HAL_SPI_TransmitReceive(_hspi, const_cast<uint8_t*>(tx), rx, chunk, HAL_MAX_DELAY))) {
+        if (!update_status(HAL_SPI_TransmitReceive(
+                _hspi, const_cast<uint8_t*>(tx), rx, chunk, kSpiTransferTimeoutMs))) {
             return false;
         }
         tx += chunk;
