@@ -43,40 +43,19 @@ std::size_t UART_STM::read(std::uint8_t* data, std::size_t len, std::uint32_t ti
     }
 
     std::size_t received = 0U;
-    USART_TypeDef* usart = _huart->Instance;
-
     while (received < len) {
-        // Wait for RXNE
-        if (!(usart->ISR & USART_ISR_RXNE)) {
-            if (timeout_ms == 0U) {
-                break;
-            }
-            uint32_t start = HAL_GetTick();
-            while (!(usart->ISR & USART_ISR_RXNE)) {
-                if ((HAL_GetTick() - start) >= timeout_ms) {
-                    _last_status = HAL_TIMEOUT;
-                    return received;
-                }
-            }
+        const HAL_StatusTypeDef status = HAL_UART_Receive(
+            _huart,
+            data + received,
+            1U,
+            timeout_ms);
+        if (!update_status(status)) {
+            return received;
         }
-
-        // Read byte FIRST — this clears RXNE naturally
-        data[received++] = static_cast<uint8_t>(usart->RDR & 0xFFU);
-
-        // NOW safe to clear any error flags — byte already consumed
-        const uint32_t error_flags =
-            usart->ISR & (USART_ISR_ORE | USART_ISR_FE | USART_ISR_NE | USART_ISR_PE);
-        if (error_flags != 0U) {
-            if ((error_flags & USART_ISR_ORE) != 0U) _last_error |= HAL_UART_ERROR_ORE;
-            if ((error_flags & USART_ISR_FE) != 0U) _last_error |= HAL_UART_ERROR_FE;
-            if ((error_flags & USART_ISR_NE) != 0U) _last_error |= HAL_UART_ERROR_NE;
-            if ((error_flags & USART_ISR_PE) != 0U) _last_error |= HAL_UART_ERROR_PE;
-            usart->ICR = USART_ICR_ORECF | USART_ICR_FECF |
-                         USART_ICR_NCF | USART_ICR_PECF;
-        }
+        ++received;
     }
 
-    _last_status = HAL_OK;
+    update_status(HAL_OK);
     return received;
 }
 
