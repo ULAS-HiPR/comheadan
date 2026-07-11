@@ -93,11 +93,37 @@ struct canards_raw
     bool active{false};
 };
 
+enum class PyroEventAction : uint8_t {
+    None = 0U,
+    ArmCommand = 1U,
+    FireCommand = 2U,
+    Acknowledgement = 3U,
+    Status = 4U,
+};
+
+struct pyro_event_data
+{
+    uint32_t timestamp_ms{0U};
+    uint16_t mission_tag{0U};
+    uint16_t sequence{0U};
+    uint8_t channel{0xFFU};
+    uint8_t action{static_cast<uint8_t>(PyroEventAction::None)};
+    uint8_t result{0U};
+    uint8_t fault{0U};
+    uint8_t armed_mask{0U};
+    uint8_t continuity_mask{0U};
+    uint8_t fired_mask{0U};
+    uint8_t reserved{0U};
+};
+static_assert(sizeof(pyro_event_data) == 16U, "pyro event log contract changed");
+
 struct secondary_flight_data
 {
     gps_data gps{};
     canards_raw canards{};
+    pyro_event_data pyro{};
 };
+static_assert(sizeof(secondary_flight_data) == 64U, "secondary flight log contract changed");
 
 struct flight_data
 {

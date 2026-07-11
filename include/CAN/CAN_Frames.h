@@ -40,8 +40,11 @@
     (((id) & 0x7F0U) == CAN_ID_HEARTBEAT_BASE)
 
 
-// Magic Word
-#define PYRO_MAGIC            0xDEAD
+// Rev1 pyro command discriminator. This is an accidental-command guard, not
+// cryptographic authentication; the external RBF remains mandatory.
+constexpr uint32_t PYRO_COMMAND_KEY = 0x6F674D41U;
+constexpr uint8_t PYRO_COMMAND_ARM = 0xA1U;
+constexpr uint8_t PYRO_COMMAND_FIRE = 0xF1U;
 
 // Heartbeats
 #define NODE_CROI             0x01  // flight computer
@@ -116,26 +119,34 @@ struct __attribute__((packed)) KALMANN_Payload {
 
 struct __attribute__((packed)) PYRO_ARM_Payload {
     uint8_t  channel_mask;
-    uint16_t magic;
-    uint8_t  reserved;
+    uint8_t  command;
+    uint16_t sequence;
+    uint16_t mission_tag;
+    uint16_t command_tag;
 };
+static_assert(sizeof(PYRO_ARM_Payload) == 8U, "pyro arm command must occupy one CAN frame");
 
 
 struct __attribute__((packed)) PYRO_FIRE_Payload {
     uint8_t  channel;
-    uint16_t magic;
-    uint8_t  reserved;
-    uint32_t timestamp_ms;
+    uint8_t  command;
+    uint16_t sequence;
+    uint16_t mission_tag;
+    uint16_t command_tag;
 };
+static_assert(sizeof(PYRO_FIRE_Payload) == 8U, "pyro fire command must occupy one CAN frame");
 
-enum class PyroResult : uint8_t { FIRED = 0, FAULT = 1 };
+enum class PyroResult : uint8_t { FIRED = 0, FAULT = 1, ACCEPTED = 2 };
 
 struct __attribute__((packed)) PYRO_ACK_Payload {
     uint8_t channel;
     uint8_t result;
     uint8_t fault_code;
-    uint8_t reserved;
+    uint8_t command;
+    uint16_t sequence;
+    uint16_t mission_tag;
 };
+static_assert(sizeof(PYRO_ACK_Payload) == 8U, "pyro acknowledgement must occupy one CAN frame");
 
 // All of these are bitmasks
 struct __attribute__((packed)) PYRO_STATUS_Payload {
@@ -143,7 +154,33 @@ struct __attribute__((packed)) PYRO_STATUS_Payload {
     uint8_t cont_check;
     uint8_t faults1;
     uint8_t faults2;
+    uint8_t fired;
+    uint8_t croi_state;
+    uint16_t last_sequence;
 };
+static_assert(sizeof(PYRO_STATUS_Payload) == 8U, "pyro status must occupy one CAN frame");
+
+inline uint16_t pyro_command_tag(uint8_t command,
+                                 uint8_t subject,
+                                 uint16_t sequence,
+                                 uint16_t mission_tag)
+{
+    uint32_t value = PYRO_COMMAND_KEY;
+    value ^= static_cast<uint32_t>(command) << 24U;
+    value ^= static_cast<uint32_t>(subject) << 16U;
+    value ^= sequence;
+    value ^= static_cast<uint32_t>(mission_tag) << 1U;
+    value ^= value >> 16U;
+    value *= 0x45D9F3BU;
+    value ^= value >> 16U;
+    return static_cast<uint16_t>(value);
+}
+
+inline bool pyro_sequence_newer(uint16_t candidate, uint16_t previous)
+{
+    const uint16_t delta = static_cast<uint16_t>(candidate - previous);
+    return candidate != 0U && delta != 0U && delta < 0x8000U;
+}
 
 // flags TBD
 struct __attribute__((packed)) POWER_MAIN_Payload {
