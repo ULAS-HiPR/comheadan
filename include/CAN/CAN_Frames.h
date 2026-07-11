@@ -44,7 +44,20 @@
 // cryptographic authentication; the external RBF remains mandatory.
 constexpr uint32_t PYRO_COMMAND_KEY = 0x6F674D41U;
 constexpr uint8_t PYRO_COMMAND_ARM = 0xA1U;
-constexpr uint8_t PYRO_COMMAND_FIRE = 0xF1U;
+constexpr uint8_t PYRO_COMMAND_FIRE_DROGUE = 0xF4U;
+constexpr uint8_t PYRO_COMMAND_FIRE_MAIN = 0xF5U;
+
+inline bool pyro_is_fire_command(uint8_t command)
+{
+    return command == PYRO_COMMAND_FIRE_DROGUE ||
+           command == PYRO_COMMAND_FIRE_MAIN;
+}
+
+inline uint8_t pyro_fire_expected_state(uint8_t command)
+{
+    return command == PYRO_COMMAND_FIRE_DROGUE ? 4U :
+           command == PYRO_COMMAND_FIRE_MAIN ? 5U : 0xFFU;
+}
 
 // Heartbeats
 #define NODE_CROI             0x01  // flight computer
