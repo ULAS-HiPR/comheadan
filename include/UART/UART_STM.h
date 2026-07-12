@@ -20,6 +20,7 @@ public:
     void delay_ms(int ms) override;
     std::uint32_t last_status() const override;
     std::uint32_t last_error() const override;
+    std::uint32_t rx_overrun_recoveries() const;
 
 private:
     bool update_status(HAL_StatusTypeDef status);
@@ -27,6 +28,7 @@ private:
     UART_HandleTypeDef* _huart;
     std::uint32_t _last_status;
     std::uint32_t _last_error;
+    std::uint32_t _rx_overrun_recoveries;
 };
 
 #endif

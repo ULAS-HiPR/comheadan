@@ -3,7 +3,7 @@
 #ifdef STM
 
 UART_STM::UART_STM(UART_HandleTypeDef* huart)
-    : _huart(huart), _last_status(HAL_OK), _last_error(0)
+    : _huart(huart), _last_status(HAL_OK), _last_error(0), _rx_overrun_recoveries(0)
 {
 }
 
@@ -40,6 +40,11 @@ std::size_t UART_STM::read(std::uint8_t* data, std::size_t len, std::uint32_t ti
         _last_status = HAL_ERROR;
         _last_error = HAL_UART_ERROR_PE;
         return 0U;
+    }
+
+    if (__HAL_UART_GET_FLAG(_huart, UART_FLAG_ORE) != RESET) {
+        __HAL_UART_CLEAR_OREFLAG(_huart);
+        ++_rx_overrun_recoveries;
     }
 
     std::size_t received = 0U;
@@ -79,6 +84,11 @@ std::uint32_t UART_STM::last_status() const
 std::uint32_t UART_STM::last_error() const
 {
     return _last_error;
+}
+
+std::uint32_t UART_STM::rx_overrun_recoveries() const
+{
+    return _rx_overrun_recoveries;
 }
 
 #endif
